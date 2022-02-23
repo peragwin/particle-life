@@ -26,7 +26,7 @@ pub struct ParticleTypes {
     max_radius: Vec<Vec<f32>>,
 }
 
-pub const DIAMETER: f32 = 4.0;
+pub const DIAMETER: f32 = 1.0;
 
 impl ParticleTypes {
     pub fn new(types: u8, params: &Params) -> Self {
@@ -95,5 +95,15 @@ impl ParticleTypes {
 
     pub fn get_color(&self, p_type: u8) -> Rgb<u8> {
         self.colors[p_type as usize]
+    }
+
+    pub fn get_max_radius(&self) -> f32 {
+        let mut max = f32::NEG_INFINITY;
+        for i in 0..self.size() {
+            for j in i..self.size() {
+                max = max.max(self.max_radius[i][j]);
+            }
+        }
+        max
     }
 }

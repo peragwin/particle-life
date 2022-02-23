@@ -124,7 +124,7 @@ impl ParticleLife {
             let [r, g, b] = self.particle_types.get_color(p.typ).0;
             shapes.push(egui::Shape::circle_filled(
                 to_screen.transform_pos(pos),
-                DIAMETER / 2.,
+                1.8,
                 Color32::from_rgb(r, g, b),
             ));
         }
