@@ -29,6 +29,10 @@ impl ParticleBuckets {
             let pos = p.pos * world_scale;
             let x = pos.x.floor() as usize;
             let y = pos.y.floor() as usize;
+            if x >= grid_size || y >= grid_size {
+                println!("oops: {:?}", p);
+                continue;
+            }
             buckets[x + y * grid_size].push(p)
         }
 

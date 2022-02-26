@@ -103,6 +103,27 @@ impl ParticleLife {
         }
 
         self.params = params;
+
+        let mut num_types = self.particle_types.size();
+        ui.add(egui::Label::new("Num Types"));
+        ui.add(egui::DragValue::new(&mut num_types).speed(1));
+        ui.end_row();
+        if num_types > 0 && num_types != self.particle_types.size() {
+            self.particle_types = ParticleTypes::new(num_types, &self.params);
+            self.particles = self
+                .universe
+                .create_particles(&self.particle_types, self.particles.len());
+        }
+
+        let mut num_particles = self.particles.len();
+        ui.add(egui::Label::new("Num Particles"));
+        ui.add(egui::DragValue::new(&mut num_particles).speed(1));
+        ui.end_row();
+        if num_particles > 0 && num_particles != self.particles.len() {
+            self.particles = self
+                .universe
+                .create_particles(&self.particle_types, num_particles);
+        }
     }
 
     fn render(&mut self, ui: &mut egui::Ui) -> egui::Response {
@@ -159,7 +180,7 @@ fn main() {
     let num_types = matches
         .value_of("num_types")
         .unwrap_or("8")
-        .parse::<u8>()
+        .parse::<usize>()
         .unwrap();
 
     let width = matches

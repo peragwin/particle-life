@@ -29,7 +29,7 @@ pub struct ParticleTypes {
 pub const DIAMETER: f32 = 1.0;
 
 impl ParticleTypes {
-    pub fn new(types: u8, params: &Params) -> Self {
+    pub fn new(types: usize, params: &Params) -> Self {
         let mut pt = Self {
             colors: Vec::new(),
             attraction: Vec::new(),
@@ -41,8 +41,7 @@ impl ParticleTypes {
         pt
     }
 
-    pub fn resize(&mut self, types: u8) {
-        let types = types as usize;
+    pub fn resize(&mut self, types: usize) {
         self.colors.resize(types, Rgb([0, 0, 0]));
         let hue_offset = random::<f64>();
         self.colors.iter_mut().enumerate().for_each(|(i, c)| {
@@ -50,7 +49,6 @@ impl ParticleTypes {
             let (r, g, b) = hsluv_to_rgb((h * 360., 100., 50.));
             c.0 = [(r * 255.) as u8, (g * 255.) as u8, (b * 255.) as u8];
         });
-        println!("{:?}", self.colors[0]);
         self.attraction.resize_with(types, || vec![0.; types]);
         self.min_radius.resize_with(types, || vec![0.; types]);
         self.max_radius.resize_with(types, || vec![0.; types]);
