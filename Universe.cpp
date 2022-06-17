@@ -14,10 +14,12 @@ Universe::Universe(size_t num_types, size_t num_particles, int width, int height
   // Serial.println("START");
   // Initialize everything
   // m_rand_gen.seed(seed); //(unsigned int)time(0));
-  // randomSeed(seed);
+  randomSeed(seed);
   Serial.printf("universe: %d\r\n", random(1024));
   SetPopulation(num_types, num_particles);
+  Serial.println("set pop");
   SetSize(float(width), float(height));
+  Serial.println("set size");
   m_center_x = m_width * 0.5f;
   m_center_y = m_height * 0.5f;
   m_zoom = 1.0f;
@@ -45,12 +47,14 @@ void Universe::ReSeed(float attract_mean, float attract_std, float minr_lower, f
   m_friction = friction;
   m_flat_force = flat_force;
   SetRandomTypes();
+  Serial.println("random types");
   SetRandomParticles();
+  Serial.println("random particles");
 }
 
 void Universe::SetPopulation(size_t num_types, size_t num_particles)
 {
-  m_types.Resize(num_types, num_particles); // num_types);
+  m_types.Resize(num_types);
   for (size_t i = 0; i < num_types; ++i)
   {
     m_types.SetColor(i, FromHSV(float(i) / num_types, 1.0f, 0.5));
@@ -62,11 +66,10 @@ void Universe::SetPopulation(size_t num_types, size_t num_particles)
   }
 }
 
-float *generate_normal(int n)
+void generate_normal(float *values, int n)
 {
   int i;
   int m = n + n % 2;
-  float *values = new float[n];
 
   if (values)
   {
@@ -84,7 +87,6 @@ float *generate_normal(int n)
       values[i + 1] = y * f;
     }
   }
-  return values;
 }
 
 void Universe::SetRandomTypes()
@@ -92,33 +94,33 @@ void Universe::SetRandomTypes()
   // std::tr1::normal_distribution<float> rand_attr(m_attract_mean, m_attract_std);
   // std::tr1::uniform_real<float> rand_minr(m_minr_lower, m_minr_upper);
   // std::tr1::uniform_real<float> rand_maxr(m_maxr_lower, m_maxr_upper);
-  auto num_particles = m_particles.size();
-
-  auto normal_dist = generate_normal(num_particles * num_particles); // m_types.Size() * m_types.Size());
+  auto num_types = m_types.Size();
+  float normal_dist[num_types * num_types];
+  generate_normal(normal_dist, num_types * num_types); // m_types.Size() * m_types.Size());
   auto rand_attr = [this](int index, float *normal_dist)
   {
-    Serial.println(normal_dist[index]);
+    // Serial.println(normal_dist[index]);
     return m_attract_std * normal_dist[index] + m_attract_mean;
   };
 
   auto rand_minr = [this]
-  { return (2.0 * random() / (float)RAND_MAX - 1.0) * (m_minr_upper - m_minr_lower) + m_minr_lower; };
+  { return (2.0f * random() / (float)RAND_MAX - 1.0f) * (m_minr_upper - m_minr_lower) + m_minr_lower; };
   auto rand_maxr = [this]
-  { return (2.0 * random() / (float)RAND_MAX - 1.0) * (m_maxr_upper - m_maxr_lower) + m_maxr_lower; };
+  { return (2.0f * random() / (float)RAND_MAX - 1.0f) * (m_maxr_upper - m_maxr_lower) + m_maxr_lower; };
 
-  for (size_t i = 0; i < num_particles; ++i)
+  for (size_t i = 0; i < num_types; ++i)
   {
     // m_types.SetColor(i, FromHSV(float(i) / m_types.Size(), 1.0f, 0.5)); // float(i % 2) * 0.5f + 0.5f));
-    for (size_t j = 0; j < num_particles; ++j)
+    for (size_t j = 0; j < num_types; ++j)
     {
       if (i == j)
       {
-        m_types.SetAttract(i, j, -abs(rand_attr(i * num_particles + j, normal_dist))); // m_rand_gen)));
+        m_types.SetAttract(i, j, -abs(rand_attr(i * num_types + j, normal_dist))); // m_rand_gen)));
         m_types.SetMinR(i, j, DIAMETER);
       }
       else
       {
-        m_types.SetAttract(i, j, rand_attr(i * num_particles + j, normal_dist));
+        m_types.SetAttract(i, j, rand_attr(i * num_types + j, normal_dist));
         m_types.SetMinR(i, j, max(rand_minr(), DIAMETER));
       }
       m_types.SetMaxR(i, j, max(rand_maxr(), m_types.MinR(i, j)));
@@ -129,8 +131,6 @@ void Universe::SetRandomTypes()
       // Serial.printf("att: %0.04f, max: %0.04f, min: %0.04f\r\n", m_types.Attract(i, j), m_types.MaxR(i, j), m_types.MinR(i, j));
     }
   }
-
-  delete[] normal_dist;
 }
 
 void Universe::SetRandomParticles()
@@ -142,7 +142,8 @@ void Universe::SetRandomParticles()
   auto rand_uni = []
   { return (2.0 * random() / (float)RAND_MAX - 1.0); };
 
-  auto rand_norm = generate_normal(m_particles.size());
+  float rand_norm[m_particles.size()];
+  generate_normal(rand_norm, m_particles.size());
 
   for (size_t i = 0; i < m_particles.size(); ++i)
   {
@@ -153,8 +154,6 @@ void Universe::SetRandomParticles()
     p.vx = (float)rand_norm[i] * 0.2f;
     p.vy = (float)rand_norm[i] * 0.2f;
   }
-
-  delete[] rand_norm;
 }
 
 void Universe::Step()
@@ -250,6 +249,8 @@ void Universe::Step()
     // Check for wall collisions
     if (m_wrap)
     {
+      p.x = fmod(p.x, m_width);
+      p.y = fmod(p.y, m_height);
       if (p.x < 0)
       {
         p.x += m_width;

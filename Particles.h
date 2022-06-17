@@ -15,16 +15,16 @@ struct Particle
 class ParticleTypes
 {
 public:
-  void Resize(size_t types, size_t particles)
+  void Resize(size_t types)
   {
     m_col.resize(types);
     for (int i = 0; i < m_col.size(); ++i)
     {
       m_col[i] = FromHSV(float(i) / m_col.size(), 1.0f, 0.5); // float(i % 2) * 0.5f + 0.5f));
     }
-    m_attract.resize(particles * particles);
-    m_minR.resize(particles * particles);
-    m_maxR.resize(particles * particles);
+    m_attract.resize(types * types);
+    m_minR.resize(types * types);
+    m_maxR.resize(types * types);
   }
 
   size_t Size() const { return m_col.size(); }

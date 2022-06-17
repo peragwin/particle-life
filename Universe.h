@@ -35,6 +35,8 @@ public:
 
   // void PrintParams() const;
 
+  ParticleTypes *GetTypes() { return &m_types; }
+
 private:
   float m_center_x;
   float m_center_y;
