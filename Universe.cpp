@@ -1,9 +1,6 @@
 #include "Universe.h"
-// #include "HSV.h"
 #include "Arduino.h"
-// #include <algorithm>
-// #include <iostream>
-// #include <iomanip>
+// #include "gridsort.h"
 
 static const float RADIUS = 1.0f;
 static const float DIAMETER = 2.0f * RADIUS;
@@ -15,7 +12,7 @@ Universe::Universe(size_t num_types, size_t num_particles, int width, int height
   // Initialize everything
   // m_rand_gen.seed(seed); //(unsigned int)time(0));
   randomSeed(seed);
-  Serial.printf("universe: %d\r\n", random(1024));
+  Serial.printf("universe: %ld\r\n", random(1024));
   SetPopulation(num_types, num_particles);
   Serial.println("set pop");
   SetSize(float(width), float(height));
@@ -57,7 +54,7 @@ void Universe::SetPopulation(size_t num_types, size_t num_particles)
   m_types.Resize(num_types);
   for (size_t i = 0; i < num_types; ++i)
   {
-    m_types.SetColor(i, FromHSV(float(i) / num_types, 1.0f, 0.5));
+    m_types.SetColor(i, ColorRGB(255, 0, 0) /* FromHSV(float(i) / num_types, 1.0f, 0.5)*/);
   }
   m_particles.resize(num_particles);
   for (size_t i = 0; i < m_particles.size(); ++i)
@@ -149,8 +146,8 @@ void Universe::SetRandomParticles()
   {
     Particle &p = m_particles[i];
     // p.type = (uint8_t)random(0, m_types.Size()); //) uint8_t(rand_type(m_rand_gen));
-    p.x = ((float)rand_uni() * 0.5f + 0.25f) * m_width;
-    p.y = ((float)rand_uni() * 0.5f + 0.25f) * m_height;
+    p.x = ((float)rand_uni() * 0.5f + 0.5f) * m_width;
+    p.y = ((float)rand_uni() * 0.5f + 0.5f) * m_height;
     p.vx = (float)rand_norm[i] * 0.2f;
     p.vy = (float)rand_norm[i] * 0.2f;
   }
@@ -158,17 +155,15 @@ void Universe::SetRandomParticles()
 
 void Universe::Step()
 {
-  for (size_t i = 0; i < m_particles.size(); ++i)
+  // grid_sort.sort(m_particles);
+
+  for (auto &p : m_particles)
   {
-    // Current particle
-    Particle &p = m_particles[i];
-
-    // Interactions
-    for (size_t j = 0; j < m_particles.size(); ++j)
+    // Serial.printf("p.x %d p.y %d", (int)p.x, (int)p.y);
+    // grid_sort.iter_neighbors(p, m_particles, m_types.MaxRadius(), [this](Particle &p, Particle &q)
+    // {
+    for (auto &q : m_particles)
     {
-      // Other particle
-      const Particle &q = m_particles[j];
-
       // Get deltas
       float dx = q.x - p.x;
       float dy = q.y - p.y;
@@ -200,6 +195,7 @@ void Universe::Step()
       if (r2 > maxR * maxR || r2 < 0.01f)
       {
         continue;
+        // return;
       }
 
       // Normalize displacement
@@ -232,6 +228,7 @@ void Universe::Step()
       p.vx += f * dx;
       p.vy += f * dy;
     }
+    //  });
   }
 
   // Update position
@@ -290,6 +287,10 @@ void Universe::Step()
         p.vy = -p.vy;
         p.y = m_height - DIAMETER;
       }
+    }
+    if (p.x < 0.0 || p.y < 0.0)
+    {
+      Serial.println("WTF");
     }
   }
 }

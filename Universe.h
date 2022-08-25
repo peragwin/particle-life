@@ -1,5 +1,6 @@
 #pragma once
 #include "Particles.h"
+// #include "gridsort.h"
 #include <tr1/random>
 #include <functional>
 
@@ -47,6 +48,7 @@ private:
   ParticleTypes m_types;
   float m_width;
   float m_height;
+  // GridSort grid_sort;
 
   std::tr1::mt19937 m_rand_gen;
 
